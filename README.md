@@ -1,4 +1,5 @@
 # helena-agent
+# sek
 
 LangGraph multi-agent service for Helena security operations. Receives chat messages from the NestJS backend via HTTP, runs a stateful agent graph, and streams responses back as Server-Sent Events (SSE).
 
