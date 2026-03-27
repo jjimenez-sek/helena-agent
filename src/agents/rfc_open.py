@@ -8,6 +8,7 @@ from langgraph.config import get_stream_writer
 from ..graphs.state import AgentState
 from ..llm import get_openai_client, resolve_api_key
 from ..observability import get_langfuse, record_node_invocation
+from .utils import format_user_context
 
 logger = structlog.get_logger(__name__)
 
@@ -238,6 +239,8 @@ async def rfc_open_questions_node(
     collected_summary = ", ".join(f"{k}={repr(v)}" for k, v in collected_fields.items()) or "none yet"
     missing_summary = ", ".join(missing_fields) if missing_fields else "all answered"
 
+    user_ctx_str = format_user_context(state)
+
     if step_complete and rfc_open_complete:
         # Transition message to closed questions
         conv_prompt = (
@@ -245,7 +248,7 @@ async def rfc_open_questions_node(
             "Tell the user they've completed the open questions phase and that you'll now ask "
             "some quick structured questions (select from options) to finalize the RFC. "
             "Keep it brief and positive."
-        )
+        ) + user_ctx_str
         conv_messages = [
             {"role": "system", "content": conv_prompt},
         ]
@@ -257,7 +260,7 @@ async def rfc_open_questions_node(
             f"You have collected all answers for step {step_num} ({topic}). "
             f"Briefly acknowledge the completion of this step and transition to step {new_rfc_step + 1}: {next_topic}. "
             f"Then ask the questions for the next step."
-        )
+        ) + user_ctx_str
         next_questions = _STEP_CONFIGS[new_rfc_step]["questions"] if new_rfc_step < 5 else ""
         conv_messages = [
             {"role": "system", "content": conv_prompt},
@@ -273,7 +276,7 @@ async def rfc_open_questions_node(
                     topic=topic,
                     missing_fields=missing_summary,
                     collected_fields=collected_summary,
-                ),
+                ) + user_ctx_str,
             },
             {
                 "role": "user",

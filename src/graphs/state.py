@@ -11,6 +11,7 @@ class AgentState(TypedDict):
     project_id: str          # project linked to this conversation
     conversation_id: str     # NestJS conversation UUID (used by execute_workflow SSE event)
     project_workflows: list  # [{workflow_id, name, description}] from project_steps
+    user_context: dict       # {name, email, company, department, job_title, country, manager}
     # Triage
     intent: str  # "rfc" | "incident" | "knowledge" | "escalation" | "unknown"
     # RFC chain state

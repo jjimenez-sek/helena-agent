@@ -95,6 +95,7 @@ class ChatStreamRequest(BaseModel):
     project_id: str = ""
     conversation_id: str = ""
     project_steps: list = []  # [{type, order, content?, workflows?}]
+    user_context: dict = {}   # {name, email, company, department, job_title, country, manager}
 
 
 class ChatResumeRequest(BaseModel):
@@ -305,6 +306,7 @@ async def chat_stream(
         "project_id": req.project_id,
         "conversation_id": req.conversation_id,
         "project_workflows": project_workflows,
+        "user_context": req.user_context,
     }
 
     logger.info(
