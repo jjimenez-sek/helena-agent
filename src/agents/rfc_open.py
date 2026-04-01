@@ -20,7 +20,7 @@ _STEP_CONFIGS = [
         "fields": ["rfc_number", "client_name"],
         "questions": (
             "Empecemos con la identificación del RFC:\n"
-            "1. ¿Cuál es el número del RFC?\n"
+            "1. ¿Cuál es el número del RFC? (Si es que se conoce)\n"
             "2. ¿Cuál es el nombre del cliente afectado?"
         ),
     },
