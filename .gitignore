@@ -1,6 +1,9 @@
 # Created by https://www.toptal.com/developers/gitignore/api/python,pydev
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,pydev
 
+#Manual Added
+.DS_Store
+
 ### pydev ###
 .pydevproject
 
