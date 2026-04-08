@@ -18,11 +18,10 @@ _STEP_CONFIGS = [
     {
         "step": 1,
         "topic": "Identificación del RFC y Cliente",
-        "fields": ["rfc_number", "client_name"],
+        "fields": ["client_name"],
         "questions": (
             "Empecemos con la identificación del RFC:\n"
-            "1. ¿Cuál es el número del RFC?\n"
-            "2. ¿Cuál es el nombre del cliente afectado?"
+            "1. ¿Cuál es el nombre del cliente afectado?"
         ),
     },
     {
@@ -49,25 +48,24 @@ _STEP_CONFIGS = [
     {
         "step": 3,
         "topic": "Equipo de Trabajo y Detalle del Cambio",
-        "fields": ["work_team", "change_objective", "technical_description", "infrastructure_involved"],
+        "fields": ["work_team", "change_objective", "technical_description"],
         "questions": (
             "Cuéntame sobre el equipo y el detalle técnico del cambio:\n"
             "1. ¿Cuál es el área o equipo que ejecutará el cambio?\n"
             "2. ¿Cuál es el objetivo del cambio?\n"
-            "3. Descripción técnica detallada: ¿en qué consiste el cambio y qué actividades incluye?\n"
-            "4. ¿Qué infraestructura está involucrada? (servidores, plataformas, servicios en la nube, etc.)"
+            "3. Descripción técnica detallada: ¿en qué consiste el cambio y qué actividades incluye?"
         ),
     },
     {
         "step": 4,
         "topic": "Impacto al Negocio y Equipos Involucrados",
-        "fields": ["impact_during_change", "impact_after_change", "systems_involved"],
+        "fields": ["impact_during_change", "impact_after_change", "systems_involved", "systems_hostnames_ips"],
         "questions": (
             "Ahora el impacto esperado y los sistemas involucrados:\n"
             "1. ¿Cuál es el impacto esperado durante el cambio? (disponibilidad de servicios, duración aproximada)\n"
             "2. ¿Cuál es el impacto esperado después del cambio? (mejoras, beneficios)\n"
-            "3. ¿Qué equipos o sistemas están involucrados? "
-            "(cluster, nodos, bases de datos, load balancers, servicios, plataforma de monitoreo, sistema de logs)"
+            "3. ¿Qué sistemas e infraestructura están involucrados en el cambio? (ej. cluster, nodos, bases de datos, load balancers, plataforma de monitoreo, servicios en la nube, etc.)\n"
+            "4. Para los sistemas que serán directamente afectados por el cambio, indica el nombre de host (hostname) y la dirección IP."
         ),
     },
     {
