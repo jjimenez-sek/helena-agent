@@ -17,7 +17,6 @@ class Settings(BaseSettings):
     langfuse_public_key: str = ""
     langfuse_host: str = "http://localhost:3010"
     nestjs_base_url: str = ""
-    internal_api_token: str = ""
 
 
 settings = Settings()
