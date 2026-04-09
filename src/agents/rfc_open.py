@@ -8,6 +8,7 @@ from langgraph.config import get_stream_writer
 from ..graphs.state import AgentState
 from ..llm import get_openai_client, resolve_api_key
 from ..observability import get_langfuse, record_node_invocation
+from ..prompts import fetch_active_prompt
 from .utils import format_user_context
 
 logger = structlog.get_logger(__name__)
@@ -268,10 +269,11 @@ async def rfc_open_questions_node(
         ]
     else:
         # Ask/re-ask questions for current step
+        conv_template = await fetch_active_prompt("RFC_OPEN", _CONVERSATIONAL_SYSTEM_PROMPT)
         conv_messages = [
             {
                 "role": "system",
-                "content": _CONVERSATIONAL_SYSTEM_PROMPT.format(
+                "content": conv_template.format(
                     step=step_num,
                     topic=topic,
                     missing_fields=missing_summary,

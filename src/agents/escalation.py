@@ -6,6 +6,7 @@ from langgraph.config import get_stream_writer
 from ..graphs.state import AgentState
 from ..llm import get_openai_client, resolve_api_key
 from ..observability import get_langfuse, record_node_invocation
+from ..prompts import fetch_active_prompt
 
 logger = structlog.get_logger(__name__)
 
@@ -43,8 +44,9 @@ async def escalation_node(
         content = msg.content if hasattr(msg, "content") else str(msg)
         conversation_summary.append(f"{role}: {content}")
 
+    system_prompt = await fetch_active_prompt("ESCALATION", _ESCALATION_SYSTEM_PROMPT)
     messages_payload = [
-        {"role": "system", "content": _ESCALATION_SYSTEM_PROMPT},
+        {"role": "system", "content": system_prompt},
         {
             "role": "user",
             "content": "Conversation so far:\n\n" + "\n".join(conversation_summary),

@@ -7,6 +7,7 @@ from langchain_core.runnables import RunnableConfig
 from ..graphs.state import AgentState
 from ..llm import get_openai_client, resolve_api_key
 from ..observability import get_langfuse, record_node_invocation
+from ..prompts import fetch_active_prompt
 from .utils import format_user_context
 
 logger = structlog.get_logger(__name__)
@@ -58,7 +59,8 @@ async def triage_node(
         metadata={"thread_id": thread_id, "node": "triage"},
     )
 
-    messages_payload = [{"role": "system", "content": _TRIAGE_SYSTEM_PROMPT + format_user_context(state)}]
+    system_prompt = await fetch_active_prompt("TRIAGE", _TRIAGE_SYSTEM_PROMPT)
+    messages_payload = [{"role": "system", "content": system_prompt + format_user_context(state)}]
     for msg in state["messages"]:
         if hasattr(msg, "type"):
             role = "assistant" if msg.type == "ai" else "user"

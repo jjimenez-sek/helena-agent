@@ -9,6 +9,7 @@ from langgraph.config import get_stream_writer
 from ..graphs.state import AgentState
 from ..llm import get_openai_client, resolve_api_key
 from ..observability import get_langfuse, record_node_invocation
+from ..prompts import fetch_active_prompt
 
 logger = structlog.get_logger(__name__)
 
@@ -57,7 +58,8 @@ async def orchestrator_node(
         input={"messages": [m.content if hasattr(m, "content") else str(m) for m in state["messages"]]},
     )
 
-    messages_payload = [{"role": "system", "content": SYSTEM_PROMPT}]
+    system_prompt = await fetch_active_prompt("ORCHESTRATOR", SYSTEM_PROMPT)
+    messages_payload = [{"role": "system", "content": system_prompt}]
     for msg in state["messages"]:
         if hasattr(msg, "type"):
             role = "assistant" if msg.type == "ai" else "user"
