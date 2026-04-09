@@ -9,6 +9,7 @@ from langgraph.types import Command, interrupt
 from ..graphs.state import AgentState
 from ..llm import get_openai_client, resolve_api_key
 from ..observability import get_langfuse, record_node_invocation
+from ..prompts import fetch_active_prompt
 
 logger = structlog.get_logger(__name__)
 
@@ -54,7 +55,8 @@ async def workflow_node(
     )
 
     # Build messages for workflow decision
-    messages_payload = [{"role": "system", "content": _WORKFLOW_DECISION_PROMPT}]
+    workflow_prompt = await fetch_active_prompt("WORKFLOW", _WORKFLOW_DECISION_PROMPT)
+    messages_payload = [{"role": "system", "content": workflow_prompt}]
     for msg in state["messages"]:
         if hasattr(msg, "type"):
             role = "assistant" if msg.type == "ai" else "user"

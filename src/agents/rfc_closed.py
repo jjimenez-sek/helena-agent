@@ -6,6 +6,7 @@ from langgraph.config import get_stream_writer
 from ..graphs.state import AgentState
 from ..llm import get_openai_client, resolve_api_key
 from ..observability import get_langfuse, record_node_invocation
+from ..prompts import fetch_active_prompt
 
 logger = structlog.get_logger(__name__)
 
@@ -174,10 +175,11 @@ async def rfc_closed_questions_node(
             f"- {q['id']} ({q['field']}): {q['question']}\n  Options: {', '.join(q['options'])}"
             for q in CLOSED_QUESTIONS
         )
+        closed_template = await fetch_active_prompt("RFC_CLOSED", _PROCESS_ANSWERS_SYSTEM_PROMPT)
         extraction_messages = [
             {
                 "role": "system",
-                "content": _PROCESS_ANSWERS_SYSTEM_PROMPT.format(questions_list=questions_list),
+                "content": closed_template.format(questions_list=questions_list),
             },
             {"role": "user", "content": state["messages"][-1].content},
         ]

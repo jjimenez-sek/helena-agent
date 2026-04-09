@@ -7,6 +7,7 @@ from ..db.postgres import get_pool
 from ..graphs.state import AgentState
 from ..llm import get_openai_client, resolve_api_key
 from ..observability import get_langfuse, record_node_invocation
+from ..prompts import fetch_active_prompt
 
 logger = structlog.get_logger(__name__)
 
@@ -81,8 +82,9 @@ async def rag_node(
 
     # Build augmented prompt
     context_block = "\n\n---\n\n".join(context_docs) if context_docs else "No relevant documents found."
+    rag_prompt = await fetch_active_prompt("RAG", RAG_SYSTEM_PROMPT)
     messages_payload = [
-        {"role": "system", "content": RAG_SYSTEM_PROMPT},
+        {"role": "system", "content": rag_prompt},
         {
             "role": "user",
             "content": (

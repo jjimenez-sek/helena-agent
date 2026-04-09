@@ -6,6 +6,7 @@ from langgraph.config import get_stream_writer
 from ..graphs.state import AgentState
 from ..llm import get_openai_client, resolve_api_key
 from ..observability import get_langfuse, record_node_invocation
+from ..prompts import fetch_active_prompt
 
 logger = structlog.get_logger(__name__)
 
@@ -96,10 +97,11 @@ async def rfc_summary_confirm_node(
         correction_text = state["messages"][-1].content or ""
 
         # Apply correction to rfc_data via LLM
+        correction_template = await fetch_active_prompt("RFC_SUMMARY", _CORRECTION_SYSTEM_PROMPT)
         correction_messages = [
             {
                 "role": "system",
-                "content": _CORRECTION_SYSTEM_PROMPT.format(
+                "content": correction_template.format(
                     correction=correction_text,
                     rfc_data=rfc_data_str,
                 ),
@@ -108,10 +110,11 @@ async def rfc_summary_confirm_node(
         intro_messages = correction_messages
     else:
         # First visit — generate full summary
+        summary_prompt = await fetch_active_prompt("RFC_SUMMARY", _SUMMARY_SYSTEM_PROMPT)
         intro_messages = [
             {
                 "role": "system",
-                "content": _SUMMARY_SYSTEM_PROMPT,
+                "content": summary_prompt,
             },
             {
                 "role": "user",
