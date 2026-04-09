@@ -44,12 +44,11 @@ async def fetch_active_prompt(prompt_type: str, fallback: Optional[str] = None) 
     if cached_content and now < expires_at:
         return cached_content
 
-    if settings.nestjs_base_url and settings.internal_api_token:
+    if settings.nestjs_base_url:
         try:
             async with httpx.AsyncClient(timeout=2.0) as client:
                 resp = await client.get(
                     f"{settings.nestjs_base_url}/api/v3/ai-prompts/{prompt_type}/active",
-                    headers={"x-internal-token": settings.internal_api_token},
                 )
                 resp.raise_for_status()
                 content: str = resp.json()["content"]
