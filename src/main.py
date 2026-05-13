@@ -98,6 +98,16 @@ class ChatStreamRequest(BaseModel):
     user_context: dict = {}   # {name, email, company, department, job_title, country, manager}
 
 
+class ChatFromTemplateRequest(BaseModel):
+    thread_id: str
+    message: str
+    openai_api_key: str
+    project_id: str = ""
+    conversation_id: str = ""
+    project_steps: list = []
+    rfc_template_data: dict = {}
+
+
 class ChatResumeRequest(BaseModel):
     thread_id: str
     interrupt_id: str
@@ -315,6 +325,73 @@ async def chat_stream(
         user_sub=user_sub,
         project_id=req.project_id,
         workflow_count=len(project_workflows),
+    )
+
+    return StreamingResponse(
+        _stream_graph(inputs, config),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@app.post("/chat/stream-from-template")
+async def chat_stream_from_template(
+    req: ChatFromTemplateRequest,
+    user_sub: Annotated[str, Depends(get_current_user)],
+) -> StreamingResponse:
+    """Start an RFC reuse flow with pre-filled template data.
+
+    Reuses the same _stream_graph() generator as /chat/stream, inheriting
+    all timeout, client-disconnect detection, SSE formatting, and error handling.
+    Only the initial state differs: intent is pre-set to "rfc_reuse".
+    """
+    if compiled_graph is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Agent graph not initialised")
+
+    thread_id = scoped_thread_id(user_sub, req.thread_id)
+    agent_requests_total.inc()
+
+    config: dict = {
+        "configurable": {
+            "thread_id": thread_id,
+            "openai_api_key": req.openai_api_key,
+        }
+    }
+
+    project_workflows = [
+        {
+            "workflow_id": wf.get("workflowId"),
+            "name": wf.get("workflowName"),
+            "description": wf.get("description"),
+        }
+        for step in req.project_steps
+        if step.get("type") == "WORKFLOW"
+        for wf in step.get("workflows", [])
+        if wf.get("workflowId")
+    ]
+
+    inputs: dict = {
+        "messages": [HumanMessage(content=req.message)],
+        "thread_id": thread_id,
+        "project_id": req.project_id,
+        "conversation_id": req.conversation_id,
+        "project_workflows": project_workflows,
+        # RFC reuse-specific fields
+        "intent": "rfc_reuse",
+        "rfc_reuse_mode": True,
+        "rfc_template_data": req.rfc_template_data,
+    }
+
+    logger.info(
+        "chat_stream_from_template_start",
+        thread_id=thread_id,
+        user_sub=user_sub,
+        project_id=req.project_id,
+        workflow_count=len(project_workflows),
+        template_field_count=len(req.rfc_template_data),
     )
 
     return StreamingResponse(

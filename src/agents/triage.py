@@ -49,6 +49,10 @@ async def triage_node(
     ):
         return {}
 
+    # If in RFC reuse flow, skip re-classification
+    if state.get("intent") == "rfc_reuse" and state.get("rfc_reuse_mode", False):
+        return {}
+
     api_key: str = resolve_api_key(config)
     client = get_openai_client(api_key)
     thread_id: str = state.get("thread_id", "unknown")
@@ -106,7 +110,7 @@ async def triage_node(
         logger.warning("triage_json_parse_failed", raw=full_response[:200])
         intent = "unknown"
 
-    valid_intents = {"rfc", "incident", "knowledge", "escalation", "unknown"}
+    valid_intents = {"rfc", "rfc_reuse", "incident", "knowledge", "escalation", "unknown"}
     if intent not in valid_intents:
         intent = "unknown"
 
@@ -118,7 +122,11 @@ async def triage_node(
 
 def route_from_triage(
     state: AgentState,
-) -> Literal["rfc_open_questions", "rfc_closed_questions", "rfc_summary_confirm", "rfc_execute", "fallback_response"]:
+) -> Literal[
+    "rfc_open_questions", "rfc_closed_questions", "rfc_summary_confirm", "rfc_execute",
+    "rfc_reuse_validate", "rfc_reuse_confirm",
+    "fallback_response",
+]:
     intent = state.get("intent", "unknown")
 
     if intent == "rfc":
@@ -137,5 +145,14 @@ def route_from_triage(
         if rfc_open_complete:
             return "rfc_closed_questions"
         return "rfc_open_questions"
+
+    if intent == "rfc_reuse":
+        if state.get("rfc_execute_confirmed", False):
+            return "fallback_response"
+        if not state.get("rfc_reuse_validated", False):
+            return "rfc_reuse_validate"
+        if not state.get("rfc_reuse_confirmed", False):
+            return "rfc_reuse_confirm"
+        return "fallback_response"
 
     return "fallback_response"

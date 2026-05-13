@@ -21,3 +21,8 @@ class AgentState(TypedDict):
     rfc_closed_complete: bool
     rfc_confirmed: bool
     rfc_execute_confirmed: bool  # True once user confirms the execute step (prevents re-execution)
+    # RFC reuse (template) flow
+    rfc_template_data: dict      # Pre-filled data from a previous RFC
+    rfc_reuse_mode: bool         # True when using template flow
+    rfc_reuse_validated: bool    # LLM validation passed
+    rfc_reuse_confirmed: bool    # User confirmed after validation
