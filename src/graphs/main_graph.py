@@ -3,6 +3,7 @@ from typing import Literal
 from langgraph.graph import END, START, StateGraph
 
 from ..agents.fallback import fallback_response_node
+from ..agents.rfc_change_type import rfc_change_type_node
 from ..agents.rfc_closed import rfc_closed_questions_node
 from ..agents.rfc_execute import rfc_execute_node
 from ..agents.rfc_open import rfc_open_questions_node
@@ -14,6 +15,13 @@ from .state import AgentState
 
 
 # ── Original RFC flow routing ────────────────────────────────────────────────
+
+def _route_from_rfc_change_type(state: AgentState) -> Literal["rfc_open_questions", "__end__"]:
+    """After change type selection: if answered, proceed to open questions immediately."""
+    if state.get("rfc_change_type_complete"):
+        return "rfc_open_questions"
+    return END
+
 
 def _route_from_rfc_open(state: AgentState) -> Literal["rfc_closed_questions", "__end__"]:
     """After open questions: if all done, proceed to closed questions immediately."""
@@ -64,6 +72,7 @@ def build_graph(checkpointer):
     graph = StateGraph(AgentState)
 
     graph.add_node("triage", triage_node)
+    graph.add_node("rfc_change_type", rfc_change_type_node)
     graph.add_node("rfc_open_questions", rfc_open_questions_node)
     graph.add_node("rfc_closed_questions", rfc_closed_questions_node)
     graph.add_node("rfc_summary_confirm", rfc_summary_confirm_node)
@@ -80,6 +89,7 @@ def build_graph(checkpointer):
         "triage",
         route_from_triage,
         {
+            "rfc_change_type": "rfc_change_type",
             "rfc_open_questions": "rfc_open_questions",
             "rfc_closed_questions": "rfc_closed_questions",
             "rfc_summary_confirm": "rfc_summary_confirm",
@@ -91,6 +101,11 @@ def build_graph(checkpointer):
     )
 
     # Auto-advance when a phase completes within the same turn
+    graph.add_conditional_edges(
+        "rfc_change_type",
+        _route_from_rfc_change_type,
+        {"rfc_open_questions": "rfc_open_questions", END: END},
+    )
     graph.add_conditional_edges(
         "rfc_open_questions",
         _route_from_rfc_open,

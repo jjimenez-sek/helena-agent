@@ -125,6 +125,19 @@ CLOSED_QUESTIONS: list[dict] = [
         ],
         "required": True,
     },
+    {
+        "id": "change_context",
+        "section": "Contexto",
+        "field": "Contexto del cambio",
+        "question": "¿Cuál es el contexto del cambio?",
+        "type": "single_select",
+        "options": [
+            "Sistema, aplicación, portales",
+            "Infraestructura",
+            "Hardware",
+        ],
+        "required": True,
+    },
 ]
 
 

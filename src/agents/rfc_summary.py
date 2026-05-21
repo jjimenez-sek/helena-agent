@@ -23,11 +23,20 @@ Format the summary as a readable document with sections:
 - **Risk & Testing** (risk level, mitigation, testing plan, approvers)
 - **Structured Parameters** (priority, approval type, downtime, communication, compliance)
 
+{change_type_instruction}
+
 After the summary, ask the user to confirm:
 "Does this RFC look correct? Reply **confirm** to submit it, or tell me what needs to be corrected."
 
 Respond in the same language the user writes in.
 """
+
+_SUGGEST_CHANGE_TYPE_INSTRUCTION = """IMPORTANT: The user requested that you suggest the most appropriate change type.
+Based on ALL the RFC data collected (impact, risk level, urgency, scope, rollback plans, etc.),
+determine the best change type from: Recurrente, Normal, Estándar, Emergencia.
+Include your recommendation and a brief justification in the **Change Overview** section under "Tipo de cambio (sugerido)"."""
+
+_EXPLICIT_CHANGE_TYPE_INSTRUCTION = ""
 
 _CORRECTION_SYSTEM_PROMPT = """You are Helena, a security operations AI assistant.
 
@@ -110,7 +119,13 @@ async def rfc_summary_confirm_node(
         intro_messages = correction_messages
     else:
         # First visit — generate full summary
+        change_type = rfc_data.get("rfc_change_type", "")
+        if change_type == "Sugiéreme uno":
+            change_type_instruction = _SUGGEST_CHANGE_TYPE_INSTRUCTION
+        else:
+            change_type_instruction = _EXPLICIT_CHANGE_TYPE_INSTRUCTION
         summary_prompt = await fetch_active_prompt("RFC_SUMMARY", _SUMMARY_SYSTEM_PROMPT)
+        summary_prompt = summary_prompt.format(change_type_instruction=change_type_instruction)
         intro_messages = [
             {
                 "role": "system",
