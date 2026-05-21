@@ -23,6 +23,13 @@ class TestRFCFlow:
         }
 
         mock_triage = AsyncMock(return_value={"intent": "rfc"})
+        mock_rfc_change_type = AsyncMock(
+            return_value={
+                "messages": [AIMessage(content="Change type selected.")],
+                "rfc_data": {"rfc_change_type": "Normal"},
+                "rfc_change_type_complete": True,
+            }
+        )
         mock_rfc_open = AsyncMock(
             return_value={
                 "messages": [AIMessage(content="What is the change title?")],
@@ -32,6 +39,7 @@ class TestRFCFlow:
 
         with (
             patch("src.graphs.main_graph.triage_node", new=mock_triage),
+            patch("src.graphs.main_graph.rfc_change_type_node", new=mock_rfc_change_type),
             patch("src.graphs.main_graph.rfc_open_questions_node", new=mock_rfc_open),
         ):
             graph = build_graph(MemorySaver())
@@ -61,6 +69,13 @@ class TestRFCFlow:
 
         # When already in RFC flow, triage returns {} (its early-exit path)
         mock_triage = AsyncMock(return_value={})
+        mock_rfc_change_type = AsyncMock(
+            return_value={
+                "messages": [AIMessage(content="Change type selected.")],
+                "rfc_data": {"rfc_change_type": "Normal"},
+                "rfc_change_type_complete": True,
+            }
+        )
         mock_rfc_open = AsyncMock(
             return_value={
                 "messages": [AIMessage(content="Step 2 question.")],
@@ -70,6 +85,7 @@ class TestRFCFlow:
 
         with (
             patch("src.graphs.main_graph.triage_node", new=mock_triage),
+            patch("src.graphs.main_graph.rfc_change_type_node", new=mock_rfc_change_type),
             patch("src.graphs.main_graph.rfc_open_questions_node", new=mock_rfc_open),
         ):
             graph = build_graph(MemorySaver())
@@ -100,6 +116,13 @@ class TestRFCFlow:
         }
 
         mock_triage = AsyncMock(return_value={"intent": "rfc"})
+        mock_rfc_change_type = AsyncMock(
+            return_value={
+                "messages": [AIMessage(content="Change type selected.")],
+                "rfc_data": {"rfc_change_type": "Normal"},
+                "rfc_change_type_complete": True,
+            }
+        )
         mock_rfc_open = AsyncMock(
             return_value={
                 "messages": [AIMessage(content="Open questions done.")],
@@ -126,6 +149,7 @@ class TestRFCFlow:
 
         with (
             patch("src.graphs.main_graph.triage_node", new=mock_triage),
+            patch("src.graphs.main_graph.rfc_change_type_node", new=mock_rfc_change_type),
             patch("src.graphs.main_graph.rfc_open_questions_node", new=mock_rfc_open),
             patch("src.graphs.main_graph.rfc_closed_questions_node", new=mock_rfc_closed),
             patch("src.graphs.main_graph.rfc_summary_confirm_node", new=mock_rfc_summary),

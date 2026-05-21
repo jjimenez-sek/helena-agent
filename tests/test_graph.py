@@ -60,6 +60,13 @@ class TestGraphWiring:
         }
 
         mock_triage = AsyncMock(return_value={"intent": "rfc"})
+        mock_rfc_change_type = AsyncMock(
+            return_value={
+                "messages": [AIMessage(content="Change type selected.")],
+                "rfc_data": {"rfc_change_type": "Normal"},
+                "rfc_change_type_complete": True,
+            }
+        )
         mock_rfc_open = AsyncMock(
             return_value={
                 "messages": [AIMessage(content="What is the change title?")],
@@ -69,6 +76,7 @@ class TestGraphWiring:
 
         with (
             patch("src.graphs.main_graph.triage_node", new=mock_triage),
+            patch("src.graphs.main_graph.rfc_change_type_node", new=mock_rfc_change_type),
             patch("src.graphs.main_graph.rfc_open_questions_node", new=mock_rfc_open),
         ):
             graph = build_graph(MemorySaver())
