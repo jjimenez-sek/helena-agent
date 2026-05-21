@@ -108,12 +108,12 @@ async def rfc_change_type_node(
             full_response = (
                 "Entendido, te sugeriré el tipo de cambio más adecuado "
                 "una vez que hayamos recopilado toda la información del RFC. "
-                "Continuemos con las preguntas."
+                "Continuemos con las preguntas.\n\n"
             )
         else:
             full_response = (
                 f"Perfecto, el tipo de cambio seleccionado es **{selected}**. "
-                "Continuemos con las preguntas del RFC."
+                "Continuemos con las preguntas del RFC.\n\n"
             )
         for char in full_response:
             write({"type": "token", "content": char})
