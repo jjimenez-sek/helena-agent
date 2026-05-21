@@ -123,7 +123,7 @@ async def triage_node(
 def route_from_triage(
     state: AgentState,
 ) -> Literal[
-    "rfc_open_questions", "rfc_closed_questions", "rfc_summary_confirm", "rfc_execute",
+    "rfc_change_type", "rfc_open_questions", "rfc_closed_questions", "rfc_summary_confirm", "rfc_execute",
     "rfc_reuse_validate", "rfc_reuse_confirm",
     "fallback_response",
 ]:
@@ -144,7 +144,9 @@ def route_from_triage(
             return "rfc_summary_confirm"
         if rfc_open_complete:
             return "rfc_closed_questions"
-        return "rfc_open_questions"
+        if state.get("rfc_change_type_complete", False):
+            return "rfc_open_questions"
+        return "rfc_change_type"
 
     if intent == "rfc_reuse":
         if state.get("rfc_execute_confirmed", False):

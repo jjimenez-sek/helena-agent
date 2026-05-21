@@ -49,12 +49,15 @@ _STEP_CONFIGS = [
     {
         "step": 3,
         "topic": "Equipo de Trabajo y Detalle del Cambio",
-        "fields": ["work_team", "change_objective", "technical_description"],
+        "fields": ["work_team", "change_objective", "technical_description", "change_date", "change_start_time", "change_end_time"],
         "questions": (
             "Cuéntame sobre el equipo y el detalle técnico del cambio:\n"
             "1. ¿Cuál es el área o equipo que ejecutará el cambio?\n"
             "2. ¿Cuál es el objetivo del cambio?\n"
-            "3. Descripción técnica detallada: ¿en qué consiste el cambio y qué actividades incluye?"
+            "3. Descripción técnica detallada: ¿en qué consiste el cambio y qué actividades incluye?\n"
+            "4. ¿Cuándo será la fecha del cambio?\n"
+            "5. ¿Cuál es la hora de inicio?\n"
+            "6. ¿Cuál es la hora del final?"
         ),
     },
     {
@@ -80,6 +83,7 @@ _STEP_CONFIGS = [
             "estimated_rollback_time",
             "technical_validations",
             "acceptance_criteria",
+            "additional_comments",
         ],
         "questions": (
             "Por último, los planes de trabajo, rollback y pruebas:\n"
@@ -89,7 +93,8 @@ _STEP_CONFIGS = [
             "4. ¿Cuál es el procedimiento de rollback paso a paso?\n"
             "5. ¿Cuál es el tiempo estimado de rollback?\n"
             "6. ¿Cuáles son las validaciones técnicas del plan de pruebas?\n"
-            "7. ¿Cuáles son los criterios de aceptación para considerar el cambio exitoso?"
+            "7. ¿Cuáles son los criterios de aceptación para considerar el cambio exitoso?\n"
+            "8. ¿Tienes algún comentario adicional que añadir?"
         ),
     },
 ]

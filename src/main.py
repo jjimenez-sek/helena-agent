@@ -62,9 +62,27 @@ async def lifespan(app: FastAPI):
     pool = await init_pool()
     await run_migrations(pool)
 
-    # Initialise LangGraph checkpointer and compile graph
+    # Initialise LangGraph checkpointer and compile graph.
+    # checkpointer.setup() occasionally completes without persisting tables
+    # (observed with psycopg + uvicorn --reload). Fallback: create them via
+    # asyncpg if missing after setup().
     async with AsyncPostgresSaver.from_conn_string(settings.database_url) as checkpointer:
+        logger.info("checkpointer_setup_start")
         await checkpointer.setup()
+
+        # Verify tables actually exist; create via asyncpg as fallback
+        async with pool.acquire() as conn:
+            exists = await conn.fetchval(
+                "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'checkpoints')"
+            )
+            if not exists:
+                logger.warning("checkpointer_setup_tables_missing", msg="setup() did not create tables — running fallback DDL")
+                for migration in checkpointer.MIGRATIONS:
+                    await conn.execute(migration)
+                logger.info("checkpointer_fallback_applied")
+            else:
+                logger.info("checkpointer_setup_done")
+
         compiled_graph = build_graph(checkpointer)
         logger.info("langgraph_ready")
         yield

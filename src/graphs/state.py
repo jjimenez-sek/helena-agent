@@ -17,6 +17,7 @@ class AgentState(TypedDict):
     # RFC chain state
     rfc_step: int           # 0 = not started, 1-5 = open question steps, 6 = closed, 7 = summary/confirm
     rfc_data: dict          # accumulated RFC fields across all steps
+    rfc_change_type_complete: bool
     rfc_open_complete: bool
     rfc_closed_complete: bool
     rfc_confirmed: bool
