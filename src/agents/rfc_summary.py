@@ -10,25 +10,25 @@ from ..prompts import fetch_active_prompt
 
 logger = structlog.get_logger(__name__)
 
-_SUMMARY_SYSTEM_PROMPT = """You are Helena, a security operations AI assistant.
+_SUMMARY_SYSTEM_PROMPT = """Eres Helena, una asistente de IA para operaciones de seguridad.
 
-You have collected all information needed for an RFC (Request for Change).
-Generate a clear, professional summary of the RFC based on the data provided.
+Has recopilado toda la información necesaria para un RFC (Solicitud de Cambio).
+Genera un resumen claro y profesional del RFC con base en los datos proporcionados.
 
-Format the summary as a readable document with sections:
-- **Change Overview** (title, description, type, category)
-- **Business Justification & Impact** (justification, affected systems/users, impact level)
-- **Implementation Plan** (steps, rollback plan, dependencies, resources)
-- **Scheduling** (start/end dates, environment, change window)
-- **Risk & Testing** (risk level, mitigation, testing plan, approvers)
-- **Structured Parameters** (priority, approval type, downtime, communication, compliance)
+Estructura el resumen como un documento legible con las siguientes secciones:
+- **Descripción del Cambio** (título, descripción, tipo, categoría)
+- **Justificación e Impacto al Negocio** (justificación, sistemas/usuarios afectados, nivel de impacto)
+- **Plan de Implementación** (pasos, plan de rollback, dependencias, recursos)
+- **Ventana de Cambio** (fecha, hora de inicio, hora de término, entorno)
+- **Riesgo y Pruebas** (nivel de riesgo, mitigación, plan de pruebas, aprobadores)
+- **Parámetros Clasificatorios** (tipo de cambio, impacto en servicio, monitoreo, acceso remoto, backup, rollback, ubicación de ejecución)
 
 {change_type_instruction}
 
-After the summary, ask the user to confirm:
-"Does this RFC look correct? Reply **confirm** to submit it, or tell me what needs to be corrected."
+Al finalizar el resumen, pide confirmación al usuario:
+"¿Este RFC es correcto? Responde **confirmar** para enviarlo, o indícame qué necesita corregirse."
 
-Respond in the same language the user writes in.
+Responde en español por defecto. Si el usuario escribe en otro idioma, responde en ese idioma.
 """
 
 _SUGGEST_CHANGE_TYPE_INSTRUCTION = """IMPORTANT: The user requested that you suggest the most appropriate change type.
@@ -38,18 +38,18 @@ Include your recommendation and a brief justification in the **Change Overview**
 
 _EXPLICIT_CHANGE_TYPE_INSTRUCTION = ""
 
-_CORRECTION_SYSTEM_PROMPT = """You are Helena, a security operations AI assistant.
+_CORRECTION_SYSTEM_PROMPT = """Eres Helena, una asistente de IA para operaciones de seguridad.
 
-The user wants to correct something in their RFC. Their correction request is:
+El usuario desea corregir algo en su RFC. La corrección solicitada es:
 "{correction}"
 
-Current RFC data:
+Datos actuales del RFC:
 {rfc_data}
 
-Acknowledge the correction, confirm what you've updated, and present a brief updated summary.
-Then ask again for confirmation to submit.
+Confirma la corrección, indica qué fue actualizado y presenta un resumen breve actualizado.
+Luego solicita nuevamente la confirmación para enviar.
 
-Respond in the same language the user writes in.
+Responde en español por defecto. Si el usuario escribe en otro idioma, responde en ese idioma.
 """
 
 _CONFIRM_KEYWORDS = {"confirm", "yes", "approve", "submit", "ok", "okay", "sí", "si", "confirmar", "enviar"}
@@ -73,7 +73,7 @@ async def rfc_summary_confirm_node(
     )
 
     write = get_stream_writer()
-    write({"type": "rfc_step_progress", "step": 7, "total_open_steps": 7, "topic": "Summary & Confirmation"})
+    write({"type": "rfc_step_progress", "step": 7, "total_open_steps": 7, "topic": "Resumen y Confirmación"})
 
     has_new_message = bool(state["messages"]) and getattr(state["messages"][-1], "type", "") == "human"
     rfc_confirmed = False
@@ -94,10 +94,11 @@ async def rfc_summary_confirm_node(
             {
                 "role": "system",
                 "content": (
-                    "The user has confirmed the RFC summary. "
-                    "Acknowledge briefly that the RFC information is confirmed. "
-                    "Tell them you are now going to show them the workflows that will be triggered and ask for final confirmation before submitting. "
-                    "Be concise. Do NOT say you are submitting yet."
+                    "El usuario ha confirmado el resumen del RFC. "
+                    "Confirma brevemente que la información del RFC ha sido aprobada. "
+                    "Indícale que ahora se mostrarán los flujos de trabajo que serán ejecutados y que se solicitará confirmación final antes de enviarlo. "
+                    "Sé conciso. NO indiques que ya se está enviando. "
+                    "Responde en español por defecto. Si el usuario escribe en otro idioma, responde en ese idioma."
                 ),
             }
         ]

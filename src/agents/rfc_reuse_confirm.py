@@ -11,6 +11,16 @@ logger = structlog.get_logger(__name__)
 
 _CONFIRM_KEYWORDS = {"confirm", "yes", "approve", "submit", "ok", "okay", "sí", "si", "confirmar", "enviar"}
 
+_SUMMARY_PROMPT = """You are Helena, a security operations AI assistant.
+
+The user has submitted a pre-filled RFC from a previous template.
+
+Present a clean, professional summary of the RFC data below, organized by sections.
+After the summary, ask the user to reply with "confirmar" or "enviar" to submit it.
+
+Respond in the same language the user writes in (likely Spanish).
+"""
+
 
 async def rfc_reuse_confirm_node(
     state: AgentState,
@@ -34,24 +44,22 @@ async def rfc_reuse_confirm_node(
     write = get_stream_writer()
     write({"type": "rfc_step_progress", "step": 2, "total_open_steps": 2, "topic": "Confirmation"})
 
+    summary_shown = state.get("rfc_reuse_summary_shown", False)
     has_new_message = (
         bool(state["messages"])
         and getattr(state["messages"][-1], "type", "") == "human"
     )
 
     rfc_reuse_confirmed = False
-    rfc_reuse_validated = state.get("rfc_reuse_validated", True)
     is_correction = False
 
-    if has_new_message:
+    if summary_shown and has_new_message:
         user_text = (state["messages"][-1].content or "").strip().lower()
         if any(kw in user_text for kw in _CONFIRM_KEYWORDS):
             rfc_reuse_confirmed = True
             logger.info("rfc_reuse_confirmed_by_user", thread_id=thread_id)
         else:
-            # User sent a correction — invalidate so we go back to validate
             is_correction = True
-            rfc_reuse_validated = False
             logger.info("rfc_reuse_correction_received", thread_id=thread_id)
 
     if rfc_reuse_confirmed:
@@ -118,6 +126,7 @@ async def rfc_reuse_confirm_node(
 
         return {
             "messages": [AIMessage(content=full_response)],
+            "rfc_reuse_summary_shown": True,
             "rfc_reuse_confirmed": True,
             "rfc_execute_confirmed": True,
         }
@@ -169,5 +178,42 @@ async def rfc_reuse_confirm_node(
             "messages": [AIMessage(content=full_response)],
         }
 
-    # No user message yet — should not normally happen, but handle gracefully
-    return {"messages": []}
+    # Summary not yet shown (first call) — display RFC summary and ask for confirmation
+    rfc_data_str = "\n".join(f"- **{k}**: {v}" for k, v in rfc_data.items())
+    summary_messages = [
+        {"role": "system", "content": _SUMMARY_PROMPT},
+        {"role": "user", "content": f"RFC data:\n\n{rfc_data_str}"},
+    ]
+
+    summary_gen = trace.generation(
+        name="rfc_reuse_summary_llm",
+        model="gpt-5",
+        input={"messages": summary_messages},
+    )
+
+    summary_stream = await client.chat.completions.create(
+        model="gpt-5",
+        messages=summary_messages,
+        stream=True,
+        stream_options={"include_usage": True},
+    )
+
+    full_response = ""
+    prompt_tokens = 0
+    completion_tokens = 0
+
+    async for chunk in summary_stream:
+        delta = chunk.choices[0].delta.content if chunk.choices else ""
+        if delta:
+            write({"type": "token", "content": delta})
+            full_response += delta
+        if chunk.usage:
+            prompt_tokens = chunk.usage.prompt_tokens
+            completion_tokens = chunk.usage.completion_tokens
+
+    summary_gen.end(output=full_response, usage={"input": prompt_tokens, "output": completion_tokens})
+
+    return {
+        "messages": [AIMessage(content=full_response)],
+        "rfc_reuse_summary_shown": True,
+    }

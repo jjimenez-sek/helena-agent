@@ -38,7 +38,7 @@ _STEP_CONFIGS = [
         ],
         "questions": (
             "Ahora necesito los responsables del cambio:\n"
-            "1. ¿Cuál es el nombre del autorizador del cliente? (nombre y cargo)\n"
+            "1. ¿Qué área debe ser notificada del cambio, considerando que no participó en la supervisión ni ejecución de este?\n"
             "2. ¿Cuál es el nombre del responsable técnico que ejecutará el cambio? (nombre y cargo)\n"
             "3. ¿Cuál es el número de teléfono del responsable técnico?\n"
             "4. ¿Cuál es el nombre del supervisor del cambio? (nombre y cargo)\n"
@@ -55,9 +55,9 @@ _STEP_CONFIGS = [
             "1. ¿Cuál es el área o equipo que ejecutará el cambio?\n"
             "2. ¿Cuál es el objetivo del cambio?\n"
             "3. Descripción técnica detallada: ¿en qué consiste el cambio y qué actividades incluye?\n"
-            "4. ¿Cuándo será la fecha del cambio?\n"
-            "5. ¿Cuál es la hora de inicio?\n"
-            "6. ¿Cuál es la hora del final?"
+            "4. ¿Cuál es la fecha programada del cambio? (formato dd/mm/aaaa, ej: 01/06/2026)\n"
+            "5. ¿Cuál es la hora de inicio? (formato HH:MM, ej: 10:00)\n"
+            "6. ¿Cuál es la hora de término? (formato HH:MM, ej: 12:00)"
         ),
     },
     {
