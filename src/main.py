@@ -397,10 +397,11 @@ async def chat_stream_from_template(
         "project_id": req.project_id,
         "conversation_id": req.conversation_id,
         "project_workflows": project_workflows,
-        # RFC reuse-specific fields
+        # RFC reuse-specific fields — validation is skipped for template submissions
         "intent": "rfc_reuse",
         "rfc_reuse_mode": True,
         "rfc_template_data": req.rfc_template_data,
+        "rfc_reuse_validated": True,
     }
 
     logger.info(

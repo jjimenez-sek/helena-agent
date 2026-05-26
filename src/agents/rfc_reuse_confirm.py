@@ -123,13 +123,15 @@ async def rfc_reuse_confirm_node(
         }
 
     if is_correction:
-        # Acknowledge correction — routing will send back to validate
+        # Template submissions skip re-validation — ask user to confirm as-is or edit the template
         correction_messages = [
             {
                 "role": "system",
                 "content": (
-                    "The user wants to make changes to their RFC before confirming. "
-                    "Acknowledge that you received their corrections and that you will re-validate the RFC. "
+                    "The user sent a message that is not a confirmation keyword. "
+                    "The RFC was submitted from a pre-filled template and does not go through re-validation. "
+                    "Let the user know that to make changes they should edit the template directly and resubmit. "
+                    "To proceed with the current RFC, they should confirm with a word like 'confirmar' or 'enviar'. "
                     "Be concise. Respond in the same language the user writes in (likely Spanish)."
                 ),
             },
@@ -165,7 +167,6 @@ async def rfc_reuse_confirm_node(
 
         return {
             "messages": [AIMessage(content=full_response)],
-            "rfc_reuse_validated": False,  # Force re-validation
         }
 
     # No user message yet — should not normally happen, but handle gracefully

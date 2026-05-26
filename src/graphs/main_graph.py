@@ -55,17 +55,6 @@ def _route_from_rfc_reuse_validate(
     return END
 
 
-def _route_from_rfc_reuse_confirm(
-    state: AgentState,
-) -> Literal["rfc_reuse_validate", "__end__"]:
-    """After confirmation: if user corrected, re-validate. Otherwise done (execute already emitted or waiting)."""
-    if state.get("rfc_reuse_confirmed"):
-        return END  # execute_workflow already emitted
-    if not state.get("rfc_reuse_validated"):
-        return "rfc_reuse_validate"  # Re-validate after correction
-    return END  # Wait for user confirmation
-
-
 # ── Graph construction ───────────────────────────────────────────────────────
 
 def build_graph(checkpointer):
@@ -131,10 +120,6 @@ def build_graph(checkpointer):
         _route_from_rfc_reuse_validate,
         {"rfc_reuse_confirm": "rfc_reuse_confirm", END: END},
     )
-    graph.add_conditional_edges(
-        "rfc_reuse_confirm",
-        _route_from_rfc_reuse_confirm,
-        {"rfc_reuse_validate": "rfc_reuse_validate", END: END},
-    )
+    graph.add_edge("rfc_reuse_confirm", END)
 
     return graph.compile(checkpointer=checkpointer)

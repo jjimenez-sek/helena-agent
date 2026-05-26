@@ -13,7 +13,7 @@ logger = structlog.get_logger(__name__)
 
 # All fields that must be present for a complete RFC
 REQUIRED_OPEN_FIELDS = [
-    "rfc_number", "client_name", "client_authorizer",
+    "client_name", "client_authorizer",
     "technical_responsible_name", "change_supervisor",
     "work_team", "change_objective", "technical_description",
     "infrastructure_involved", "impact_during_change",
