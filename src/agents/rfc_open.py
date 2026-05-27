@@ -194,12 +194,12 @@ async def rfc_open_questions_node(
 
         extraction_gen = trace.generation(
             name="rfc_extraction_llm",
-            model="gpt-4o-mini",
+            model="gpt-5",
             input={"messages": extraction_messages},
         )
 
         extraction_stream = await client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-5",
             messages=extraction_messages,
             stream=True,
         )

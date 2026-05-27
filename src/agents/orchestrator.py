@@ -54,7 +54,7 @@ async def orchestrator_node(
     )
     generation = trace.generation(
         name="orchestrator_llm",
-        model="gpt-4o-mini",
+        model="gpt-4o",
         input={"messages": [m.content if hasattr(m, "content") else str(m) for m in state["messages"]]},
     )
 
@@ -71,7 +71,7 @@ async def orchestrator_node(
     write = get_stream_writer()
 
     stream = await client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-5",
         messages=messages_payload,
         stream=True,
         stream_options={"include_usage": True},
