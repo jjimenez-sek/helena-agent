@@ -1,3 +1,5 @@
+import json
+
 import structlog
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
@@ -50,6 +52,19 @@ Confirma la corrección, indica qué fue actualizado y presenta un resumen breve
 Luego solicita nuevamente la confirmación para enviar.
 
 Responde en español por defecto. Si el usuario escribe en otro idioma, responde en ese idioma.
+"""
+
+_CORRECTION_EXTRACTION_PROMPT = """Eres un asistente que extrae información estructurada de correcciones de RFC.
+
+El usuario desea corregir uno o más campos de su RFC. La corrección solicitada es:
+"{correction}"
+
+Datos actuales del RFC:
+{rfc_data}
+
+Identifica qué campo(s) el usuario desea modificar y devuelve ÚNICAMENTE un objeto JSON válido con los campos actualizados y sus nuevos valores. Usa los mismos nombres de campo que aparecen en los datos actuales del RFC.
+Si no puedes identificar campos concretos, devuelve {{}}.
+No incluyas texto adicional, solo el JSON.
 """
 
 _CONFIRM_KEYWORDS = {"confirm", "yes", "approve", "submit", "ok", "okay", "sí", "si", "confirmar", "enviar"}
@@ -106,7 +121,33 @@ async def rfc_summary_confirm_node(
         # User sent a correction
         correction_text = state["messages"][-1].content or ""
 
-        # Apply correction to rfc_data via LLM
+        # Step 1: Extract corrected field values as JSON (non-streaming)
+        extraction_prompt = await fetch_active_prompt("RFC_CORRECTION_EXTRACTION", _CORRECTION_EXTRACTION_PROMPT)
+        extraction_resp = await client.chat.completions.create(
+            model="gpt-5",
+            messages=[
+                {
+                    "role": "system",
+                    "content": extraction_prompt.format(
+                        correction=correction_text,
+                        rfc_data=rfc_data_str,
+                    ),
+                }
+            ],
+        )
+        try:
+            extracted = json.loads(extraction_resp.choices[0].message.content.strip())
+            if isinstance(extracted, dict):
+                rfc_data_updated = dict(rfc_data)
+                rfc_data_updated.update({k: v for k, v in extracted.items() if v})
+                logger.info("rfc_correction_merged", thread_id=thread_id, fields=list(extracted.keys()))
+        except (json.JSONDecodeError, AttributeError):
+            logger.warning("rfc_correction_parse_failed", thread_id=thread_id)
+
+        # Step 2: Rebuild rfc_data_str with updated values for the conversational response
+        rfc_data_str = "\n".join(f"- **{k}**: {v}" for k, v in rfc_data_updated.items())
+
+        # Step 3: Generate conversational correction response with updated data
         correction_template = await fetch_active_prompt("RFC_SUMMARY", _CORRECTION_SYSTEM_PROMPT)
         correction_messages = [
             {
